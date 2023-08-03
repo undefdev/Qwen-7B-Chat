@@ -153,7 +153,7 @@ class QWenTokenizer(PreTrainedTokenizer):
         if len(ids) > self.max_len:
             logger.warning(
                 "Token indices sequence length is longer than the specified maximum "
-                " sequence length for this OpenAI GPT model ({} > {}). Running this"
+                " sequence length for this model ({} > {}). Running this"
                 " sequence through the model will result in indexing errors".format(
                     len(ids), self.max_len
                 )
