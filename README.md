@@ -5,6 +5,7 @@ language:
 tags:
 - qwen
 pipeline_tag: text-generation
+inference: false
 ---
 
 # Qwen-7B-Chat
