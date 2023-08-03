@@ -9,7 +9,7 @@
     "AutoModelForCausalLM": "modeling_qwen.QWenLMHeadModel"
   },
   "attn_pdrop": 0.0,
-  "bf16": true,
+  "bf16": false,
   "bias_dropout_fusion": true,
   "bos_token_id": 151643,
   "embd_pdrop": 0.1,

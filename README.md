@@ -271,9 +271,17 @@ Qwen-7B-Chat also has the capability to be used as a [HuggingFace Agent](https:/
 
 ## 量化（Quantization）
 
-如希望使用更低精度的量化模型，如4比特和8比特的模型，我们提供了简单的示例来说明如何快速使用量化模型：
+如希望使用更低精度的量化模型，如4比特和8比特的模型，我们提供了简单的示例来说明如何快速使用量化模型。在开始前，确保你已经安装了`bitsandbytes`。
 
-To load the model in lower precision, e.g., 4 bits and 8 bits, we provide examples to show how to load by adding quantization configuration:
+We provide examples to show how to load models in `NF4` and `Int8`. For starters, make sure you have implemented `bitsandbytes`.
+
+```bash
+pip install bitsandbytes
+```
+
+你只需要在`AutoModelForCausalLM.from_pretrained`中添加你的量化配置，即可使用量化模型。如下所示：
+
+Then you only need to add your quantization configuration to `AutoModelForCausalLM.from_pretrained`. See the example below:
 
 ```python
 from transformers import BitsAndBytesConfig
@@ -284,7 +292,6 @@ quantization_config = BitsAndBytesConfig(
     bnb_4bit_quant_type='nf4',
     bnb_4bit_compute_dtype=torch.bfloat16
 )
-
 
 # quantization configuration for Int8 (8 bits)
 quantization_config = BitsAndBytesConfig(load_in_8bit=True)
