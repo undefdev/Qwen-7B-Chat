@@ -16,7 +16,7 @@ inference: false
 <br>
 
 <p align="center">
-        Qwen-7B <a href="https://modelscope.cn/models/qwen/Qwen-7B/summary">🤖 <a> | <a href="https://huggingface.co/Qwen/Qwen-7B">🤗</a>&nbsp ｜ Qwen-7B-Chat <a href="https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary">🤖 <a>| <a href="https://huggingface.co/Qwen/Qwen-7B-Chat">🤗</a>&nbsp ｜ &nbspDemo&nbsp ｜ &nbsp<a href="https://github.com/QwenLM/Qwen-7B/tech_memo.md">Report</a>
+        Qwen-7B <a href="https://modelscope.cn/models/qwen/Qwen-7B/summary">🤖 <a> | <a href="https://huggingface.co/Qwen/Qwen-7B">🤗</a>&nbsp ｜ Qwen-7B-Chat <a href="https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary">🤖 <a>| <a href="https://huggingface.co/Qwen/Qwen-7B-Chat">🤗</a>&nbsp ｜ &nbsp<a href="https://modelscope.cn/studios/qwen/Qwen-7B-Chat-Demo/summary">Demo</a>&nbsp ｜ &nbsp<a href="https://github.com/QwenLM/Qwen-7B/tech_memo.md">Report</a>
 </p>
 <br>
 
@@ -24,11 +24,11 @@ inference: false
 
 **通义千问-7B（Qwen-7B）**是阿里云研发的通义千问大模型系列的70亿参数规模的模型。Qwen-7B是基于Transformer的大语言模型, 在超大规模的预训练数据上进行训练得到。预训练数据类型多样，覆盖广泛，包括大量网络文本、专业书籍、代码等。同时，在Qwen-7B的基础上，我们使用对齐机制打造了基于大语言模型的AI助手Qwen-7B-Chat。本仓库为Qwen-7B-Chat的仓库。
 
-如果您想了解更多关于通义千问-7B开源模型的细节，我们建议您参阅Github代码库。
+如果您想了解更多关于通义千问-7B开源模型的细节，我们建议您参阅[Github代码库](https://github.com/QwenLM/Qwen-7B)。
 
 **Qwen-7B** is the 7B-parameter version of the large language model series, Qwen (abbr. Tongyi Qianwen), proposed by Aibaba Cloud. Qwen-7B`is a Transformer-based large language model, which is pretrained on a large volume of data, including web texts, books, codes, etc. Additionally, based on the pretrained Qwen-7B, we release Qwen-7B-Chat, a large-model-based AI assistant, which is trained with alignment techniques. This repository is the one for Qwen-7B-Chat.
 
-For more details about the open-source model of Qwen-7B, please refer to the Github code repository.
+For more details about the open-source model of Qwen-7B, please refer to the [Github](https://github.com/QwenLM/Qwen-7B) code repository.
 
 ## 依赖项（Dependency）
 
@@ -89,9 +89,9 @@ We show an example of multi-turn interaction with Qwen-7B-Chat in the following 
 《奋斗创业：一个年轻人的成功之路》
 ```
 
-关于更多的使用说明，请参考我们的Github repo获取更多信息。
+关于更多的使用说明，请参考我们的[Github repo](https://github.com/QwenLM/Qwen-7B)获取更多信息。
 
-For more information, please refer to our Github repo for more information.
+For more information, please refer to our [Github repo](https://github.com/QwenLM/Qwen-7B) for more information.
 
 ## 模型细节（Model）
 
