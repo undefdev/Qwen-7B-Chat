@@ -78,7 +78,7 @@ class QWenTokenizer(PreTrainedTokenizer):
 
         self.errors = errors  # how to handle errors in decoding
 
-        name = "QWen"
+        name = "Qwen"
         ENDOFTEXT = "<|endoftext|>"
         IMSTART = "<|im_start|>"
         IMEND = "<|im_end|>"
@@ -181,10 +181,6 @@ class QWenTokenizer(PreTrainedTokenizer):
         Args:
             text (`str`):
                 The sequence to be encoded.
-            pair (`str`, *optional*):
-                A second sequence to be encoded with the first.
-            add_special_tokens (`bool`, *optional*, defaults to `False`):
-                Whether or not to add the special tokens associated with the corresponding model.
             kwargs (additional keyword arguments, *optional*):
                 Will be passed to the underlying model specific encode method. See details in
                 [`~PreTrainedTokenizerBase.__call__`]
@@ -214,7 +210,31 @@ class QWenTokenizer(PreTrainedTokenizer):
         return self.tokenizer.n_vocab
 
     def _convert_id_to_token(self, index: int) -> str:
-        raise NotImplementedError
+        if index >= self.tokenizer.n_vocab:
+            return self.unk_token
+        return self.tokenizer.decode([index])
+
+    def _convert_token_to_id(self, token: str) -> int:
+        """Converts a token to an id using the vocab."""
+        return self.encoder.get(token.encode('UTF-8'), self.tokenizer.encode(self.unk_token, allowed_special='all')[0])
+
+    @property
+    def all_special_tokens(self) -> List[str]:
+        """
+        `List[str]`: All the special tokens (`'<unk>'`, `'<cls>'`, etc.) mapped to class attributes.
+
+        Convert tokens of `tokenizers.AddedToken` type to string.
+        """
+        all_toks = [str(s) for s in self.special_tokens.keys()]
+        return all_toks
+
+    @property
+    def all_special_ids(self) -> List[int]:
+        """
+        `List[int]`: List the ids of the special tokens(`'<unk>'`, `'<cls>'`, etc.) mapped to class attributes.
+        """
+        all_ids = [v for v in self.special_tokens.values()]
+        return all_ids
 
     def _tokenize(self, text, **kwargs):
         """
@@ -229,9 +249,10 @@ class QWenTokenizer(PreTrainedTokenizer):
         self,
         token_ids: Union[int, List[int]],
         skip_special_tokens: bool = False,
-        clean_up_tokenization_spaces: bool = None,
         **kwargs,
     ) -> str:
         if isinstance(token_ids, int):
             token_ids = [token_ids]
+        if skip_special_tokens:
+            token_ids = [i for i in token_ids if i not in self.all_special_ids]
         return self.tokenizer.decode(token_ids)
