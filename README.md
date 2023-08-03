@@ -100,7 +100,7 @@ For more information, please refer to our [Github repo](https://github.com/QwenL
 The details of the model architecture of Qwen-7B-Chat are listed as follows
 
 | Hyperparameter | Value |
-|:--------------:|------:|
+|:------|:------|
 | n_layers | 32 |
 | n_heads | 32 |
 | d_model | 4096 |
@@ -139,7 +139,7 @@ Note: Due to rounding errors caused by hardware and framework, differences in re
 We demonstrate the zero-shot accuracy of Qwen-7B-Chat on C-Eval validation set
 
 | Model | Avg. Acc. |
-|:--------------:|------:|
+|:--------------|:------:|
 | LLaMA2-7B-Chat | 31.9 |
 | LLaMA2-13B-Chat | 40.6 |
 | Chinese-Alpaca-2-7B | 41.3 |
@@ -154,7 +154,7 @@ C-Eval测试集上，Qwen-7B-Chat模型的zero-shot准确率结果如下：
 The zero-shot accuracy of Qwen-7B-Chat on C-Eval testing set is provided below:
 
 | Model | Avg. | STEM | Social Sciences | Humanities | Others |
-|:--------------:|------:|------:|------:|------:|------:|
+|:--------------|:------:|:------:|:------:|:------:|:------:|
 | Chinese-Alpaca-Plus-13B | 41.5 | 36.6 | 49.7 | 43.1 | 41.2 |
 | Chinese-Alpaca-2-7B | 40.3 | - | - | - | - |
 | ChatGLM2-6B-Chat | 50.1 | 46.4 | 60.4 | 50.6 | 46.9 |
@@ -175,7 +175,7 @@ The zero-shot accuracy of Qwen-7B-Chat on MMLU is provided below.
 The performance of Qwen-7B-Chat still on the top between other human-aligned models with comparable size.
 
 | Model | Avg. Acc. |
-|:--------------:|------:|
+|:--------------|:------:|
 | ChatGLM2-6B-Chat | 45.5 |
 | LLaMA2-7B-Chat | 47.0 |
 | InternLM-7B-Chat | 50.8 |
@@ -190,7 +190,7 @@ Qwen-7B-Chat在[HumanEval](https://github.com/openai/human-eval)的zero-shot Pas
 The zero-shot Pass@1 of Qwen-7B-Chat on [HumanEval](https://github.com/openai/human-eval) is demonstrated below
 
 | Model | Pass@1 |
-|:--------------:|------:|
+|:--------------|:------:|
 | LLaMA2-7B-Chat | 12.2 |
 | InternLM-7B-Chat | 14.0 |
 | Baichuan-13B-Chat | 16.5 |
@@ -204,7 +204,7 @@ The zero-shot Pass@1 of Qwen-7B-Chat on [HumanEval](https://github.com/openai/hu
 The accuracy of Qwen-7B-Chat on GSM8K is shown below
 
 | Model | Zero-shot Acc. | 4-shot Acc. |
-|:--------------:|------:|------:|
+|:--------------|:------:|:------:|
 | ChatGLM2-6B-Chat |  -  | 28.0 |
 | LLaMA2-7B-Chat | 20.4 | 28.2 |
 | LLaMA2-13B-Chat | 29.4 | 36.7 |
@@ -224,7 +224,7 @@ We introduce NTK-aware interpolation, LogN attention scaling to extend the conte
 **(To use these tricks, please set `use_dynamic_ntk` and `use_long_attn` to true in config.json.)**
 
 | Model | VCSUM (zh) |
-|----------------|-------|
+|:----------------|:-------:|
 | GPT-3.5-Turbo-16k | 16.0 |
 | LLama2-7B-Chat	|	0.2 |
 | InternLM-7B-Chat | 13.0 |
@@ -240,7 +240,7 @@ We introduce NTK-aware interpolation, LogN attention scaling to extend the conte
 Qwen-7B-Chat supports calling plugins/tools/APIs through [ReAct Prompting](https://arxiv.org/abs/2210.03629). ReAct is also one of the main approaches used by the [LangChain](https://python.langchain.com/) framework. In the soon-to-be-released evaluation benchmark for assessing tool usage capabilities, Qwen-7B-Chat's performance is as follows:
 
 | Model            | Tool Selection (Acc.↑) | Tool Input (Rouge-L↑) | False Positive Error↓ |
-|------------------|------------------------|-----------------------|-----------------------|
+|:-----------------|:----------------------:|:---------------------:|:---------------------:|
 | GPT-4            | 95%                    | **0.90**              | 15%                   |
 | GPT-3.5          | 85%                    | 0.88                  | 75%                   |
 | **Qwen-7B-Chat** | **99%**                | 0.89                  | **8.5%**              |
@@ -263,7 +263,7 @@ For how to write and use prompts for ReAct Prompting, please refer to [the ReAct
 Qwen-7B-Chat also has the capability to be used as a [HuggingFace Agent](https://huggingface.co/docs/transformers/transformers_agents). Its performance on the run-mode benchmark provided by HuggingFace is as follows:
 
 | Model | Tool Selection↑ | Tool Used↑ | Code↑ |
-|-|-|-|-|
+|:-|:-:|:-:|:-:|
 |GPT-4 | **100** | **100** | **97.41** |
 |GPT-3.5 | 95.37 | 96.30 | 87.04 |
 |StarCoder-15.5B | 87.04 | 87.96 | 68.89 |
@@ -303,7 +303,7 @@ model = AutoModelForCausalLM.from_pretrained(
 With this method, it is available to load Qwen-7B-Chat in `NF4`and `Int8`, which saves you memory usage. We provide related statistics of model performance below. We find that the quantization downgrades the effectiveness slightly but significantly increases inference efficiency and reduces memory costs.
 
 | Precision | MMLU | Memory |
-| :---------: | -------: | -----: |
+| :---------| :-------: | :-----: |
 |   BF16   |  56.7 |   16.2G |
 |   Int8   |  52.8 |   10.1G |
 |    NF4    |  48.9 |    7.4G |
