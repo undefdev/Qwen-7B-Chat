@@ -10,7 +10,7 @@ pipeline_tag: text-generation
 # Qwen-7B-Chat
 
 <p align="center">
-    <img src="assets/logo.jpg" width="400"/>
+    <img src="https://qianwen-res.oss-cn-beijing.aliyuncs.com/logo.jpg" width="400"/>
 <p>
 <br>
 
