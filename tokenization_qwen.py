@@ -20,7 +20,7 @@ from transformers import PreTrainedTokenizer, AddedToken
 
 logger = logging.getLogger(__name__)
 
-TIKTOKEN_NAME = "qwen.tiktoken"
+VOCAB_FILES_NAMES = {"vocab_file": "qwen.tiktoken"}
 
 
 class QWenTokenizer(PreTrainedTokenizer):
@@ -28,17 +28,11 @@ class QWenTokenizer(PreTrainedTokenizer):
 
     """NOTE: This tokenizer will not handle special tokens to avoid injection attacks"""
 
-    @classmethod
-    def from_pretrained(
-        cls, pretrained_model_name_or_path, cache_dir=None, *inputs, **kwargs
-    ):
-        merges_file = os.path.join(pretrained_model_name_or_path, TIKTOKEN_NAME)
-        tokenizer = cls(merges_file, *inputs, **kwargs)
-        return tokenizer
+    vocab_files_names = VOCAB_FILES_NAMES
 
     def __init__(
         self,
-        merges_file,
+        vocab_file,
         errors="replace",
         max_len=None,
         unk_token="<|endoftext|>",
@@ -113,7 +107,7 @@ class QWenTokenizer(PreTrainedTokenizer):
                 )
             }
 
-        mergeable_ranks = load_tiktoken_bpe(merges_file)
+        mergeable_ranks = load_tiktoken_bpe(vocab_file)
         special_tokens = {
             token: index
             for index, token in enumerate(special_tokens, start=len(mergeable_ranks))
