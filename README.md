@@ -12,27 +12,28 @@ pipeline_tag: text-generation
 <p align="center">
     <img src="assets/logo.jpg" width="400"/>
 <p>
+<br>
 
 <p align="center">
-        ModelScope[Base|Chat]&nbsp ｜ &nbspHuggingface[Base|Chat]&nbsp ｜ &nbspDemo&nbsp ｜ &nbspReport
+        Qwen-7B <a href="https://modelscope.cn/models/qwen/Qwen-7B/summary">🤖 <a> | <a href="https://huggingface.co/Qwen/Qwen-7B">🤗</a>&nbsp ｜ Qwen-7B-Chat <a href="https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary">🤖 <a>| <a href="https://huggingface.co/Qwen/Qwen-7B-Chat">🤗</a>&nbsp ｜ &nbspDemo&nbsp ｜ &nbsp<a href="https://github.com/QwenLM/Qwen-7B/tech_memo.md">Report</a>
 </p>
-<br><br>
+<br>
 
 ## 介绍（Introduction）
 
-通义千问-7B（`Qwen-7B`） 是阿里云研发的通义千问大模型系列的70亿参数规模的模型。`Qwen-7B`是基于Transformer的大语言模型, 在超大规模的预训练数据上进行训练得到。预训练数据类型多样，覆盖广泛，包括大量网络文本、专业书籍、代码等。同时，在`Qwen-7B`的基础上，我们使用对齐机制打造了基于大语言模型的AI助手`Qwen-7B-Chat`。本仓库为`Qwen-7B-Chat`的仓库。
+**通义千问-7B（Qwen-7B）**是阿里云研发的通义千问大模型系列的70亿参数规模的模型。Qwen-7B是基于Transformer的大语言模型, 在超大规模的预训练数据上进行训练得到。预训练数据类型多样，覆盖广泛，包括大量网络文本、专业书籍、代码等。同时，在Qwen-7B的基础上，我们使用对齐机制打造了基于大语言模型的AI助手Qwen-7B-Chat。本仓库为Qwen-7B-Chat的仓库。
 
 如果您想了解更多关于通义千问-7B开源模型的细节，我们建议您参阅Github代码库。
 
-`Qwen-7B` is the 7B-parameter version of the large language model series, Qwen (abbr. of Tongyi Qianwen), proposed by Aibaba Cloud. `Qwen-7B` is a Transformer-based large language model, which is pretrained on a large volume of data, including web texts, books, codes, etc. Additionally, based on the pretrained `Qwen-7B`, we release `Qwen-7B-Chat`, a large-model-based AI assistant, which is trained with alignment techniques. This repository is the one for `Qwen-7B-Chat`.
+**Qwen-7B** is the 7B-parameter version of the large language model series, Qwen (abbr. Tongyi Qianwen), proposed by Aibaba Cloud. Qwen-7B`is a Transformer-based large language model, which is pretrained on a large volume of data, including web texts, books, codes, etc. Additionally, based on the pretrained Qwen-7B, we release Qwen-7B-Chat, a large-model-based AI assistant, which is trained with alignment techniques. This repository is the one for Qwen-7B-Chat.
 
 For more details about the open-source model of Qwen-7B, please refer to the Github code repository.
 
 ## 依赖项（Dependency）
 
-运行`Qwen-7B-Chat`，请确保机器环境pytorch版本不低于1.12，再执行以下pip命令安装依赖库
+运行Qwen-7B-Chat，请确保机器环境pytorch版本不低于1.12，再执行以下pip命令安装依赖库
 
-To run `Qwen-7B-Chat`, please make sure that pytorch version is not lower than 1.12, and then execute the following pip commands to install the dependency libraries.
+To run Qwen-7B-Chat, please make sure that pytorch version is not lower than 1.12, and then execute the following pip commands to install the dependent libraries.
 
 ```bash
 pip install transformers==4.31.0 accelerate tiktoken einops
@@ -51,9 +52,9 @@ pip install csrc/rotary
 
 ## 快速使用（Quickstart）
 
-下面我们展示了一个使用`Qwen-7B-Chat`模型，进行多轮对话交互的样例：
+下面我们展示了一个使用Qwen-7B-Chat模型，进行多轮对话交互的样例：
 
-We show an example of multi-turn interaction with `Qwen-7B-Chat` in the following code:
+We show an example of multi-turn interaction with Qwen-7B-Chat in the following code:
 
 ```ipython
 >>> from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -93,9 +94,9 @@ For more information, please refer to our Github repo for more information.
 
 ## 模型细节（Model）
 
-与`Qwen-7B`预训练模型相同，`Qwen-7B-Chat`模型规模基本情况如下所示
+与Qwen-7B预训练模型相同，Qwen-7B-Chat模型规模基本情况如下所示
 
-The details of the model architecture of `Qwen-7B-Chat` are listed as follows
+The details of the model architecture of Qwen-7B-Chat are listed as follows
 
 | Hyperparameter | Value |
 |:--------------:|------:|
@@ -114,17 +115,17 @@ The details of the model architecture of `Qwen-7B-Chat` are listed as follows
 
 For position encoding, FFN activation function, and normalization calculation methods, we adopt the prevalent practices, i.e., RoPE relative position encoding, SwiGLU for activation function, and RMSNorm for normalization (optional installation of flash-attention for acceleration).
 
-For tokenization, compared to the current mainstream open-source models based on Chinese and English vocabularies, `Qwen-7B-Chat` uses a vocabulary of over 150K tokens.
+For tokenization, compared to the current mainstream open-source models based on Chinese and English vocabularies, Qwen-7B-Chat uses a vocabulary of over 150K tokens.
 It first considers efficient encoding of Chinese, English, and code data, and is also more friendly to multilingual languages, enabling users to directly enhance the capability of some languages without expanding the vocabulary.
 It segments numbers by single digit, and calls the [tiktoken](https://github.com/openai/tiktoken) tokenizer library for efficient tokenization.
 
 ## 评测效果（Evaluation）
 
-对于`Qwen-7B-Chat`模型，我们同样评测了常规的中文理解（C-Eval）、英文理解（MMLU）、代码（HumanEval）和数学（GSM8K）等权威任务，同时包含了长序列任务的评测结果。由于Qwen-7B-Chat模型经过对齐后，激发了较强的外部系统调用能力，我们还进行了工具使用能力方面的评测。
+对于Qwen-7B-Chat模型，我们同样评测了常规的中文理解（C-Eval）、英文理解（MMLU）、代码（HumanEval）和数学（GSM8K）等权威任务，同时包含了长序列任务的评测结果。由于Qwen-7B-Chat模型经过对齐后，激发了较强的外部系统调用能力，我们还进行了工具使用能力方面的评测。
 
 提示：由于硬件和框架造成的舍入误差，复现结果如有波动属于正常现象。
 
-For `Qwen-7B-Chat`, we also evaluate the model on C-Eval, MMLU, HumanEval, GSM8K, etc., as well as the benchmark evaluation for long-context understanding, and tool usage.
+For Qwen-7B-Chat, we also evaluate the model on C-Eval, MMLU, HumanEval, GSM8K, etc., as well as the benchmark evaluation for long-context understanding, and tool usage.
 
 Note: Due to rounding errors caused by hardware and framework, differences in reproduced results are possible.
 
@@ -132,9 +133,9 @@ Note: Due to rounding errors caused by hardware and framework, differences in re
 
 #### C-Eval
 
-在[C-Eval](https://arxiv.org/abs/2305.08322)验证集上，我们评价了`Qwen-7B-Chat`模型的zero-shot准确率
+在[C-Eval](https://arxiv.org/abs/2305.08322)验证集上，我们评价了Qwen-7B-Chat模型的zero-shot准确率
 
-We demonstrate the zero-shot accuracy of `Qwen-7B-Chat` on C-Eval validation set
+We demonstrate the zero-shot accuracy of Qwen-7B-Chat on C-Eval validation set
 
 | Model | Avg. Acc. |
 |:--------------:|------:|
@@ -147,9 +148,9 @@ We demonstrate the zero-shot accuracy of `Qwen-7B-Chat` on C-Eval validation set
 | InternLM-7B-Chat | 53.2 |
 | **Qwen-7B-Chat** | **54.2** |
 
-C-Eval测试集上，`Qwen-7B-Chat`模型的zero-shot准确率结果如下：
+C-Eval测试集上，Qwen-7B-Chat模型的zero-shot准确率结果如下：
 
-The zero-shot accuracy of `Qwen-7B-Chat` on C-Eval testing set is provided below:
+The zero-shot accuracy of Qwen-7B-Chat on C-Eval testing set is provided below:
 
 | Model | Avg. | STEM | Social Sciences | Humanities | Others |
 |:--------------:|------:|------:|------:|------:|------:|
@@ -159,18 +160,18 @@ The zero-shot accuracy of `Qwen-7B-Chat` on C-Eval testing set is provided below
 | Baichuan-13B-Chat | 51.5 | 43.7 | 64.6 | 56.2 | 49.2 |
 | **Qwen-7B-Chat** | **54.6** | 47.8 | 67.6 | 59.3 | 50.6 |
 
-在7B规模模型上，经过人类指令对齐的`Qwen-7B-Chat`模型，准确率在同类相近规模模型中仍然处于前列。
+在7B规模模型上，经过人类指令对齐的Qwen-7B-Chat模型，准确率在同类相近规模模型中仍然处于前列。
 
-Compared with other pretrained models with comparable model size, the human-aligned `Qwen-7B-Chat` performs well in C-Eval accuracy.
+Compared with other pretrained models with comparable model size, the human-aligned Qwen-7B-Chat performs well in C-Eval accuracy.
 
 ### 英文评测（English Evaluation）
 
 #### MMLU
 
-[MMLU](https://arxiv.org/abs/2009.03300)评测集上，`Qwen-7B-Chat`模型的zero-shot准确率如下，效果同样在同类对齐模型中同样表现较优。
+[MMLU](https://arxiv.org/abs/2009.03300)评测集上，Qwen-7B-Chat模型的zero-shot准确率如下，效果同样在同类对齐模型中同样表现较优。
 
 The zero-shot accuracy of Qwen-7B-Chat on MMLU is provided below.
-The performance of `Qwen-7B-Chat` still on the top between other human-aligned models with comparable size.
+The performance of Qwen-7B-Chat still on the top between other human-aligned models with comparable size.
 
 | Model | Avg. Acc. |
 |:--------------:|------:|
@@ -185,7 +186,7 @@ The performance of `Qwen-7B-Chat` still on the top between other human-aligned m
 
 Qwen-7B-Chat在[HumanEval](https://github.com/openai/human-eval)的zero-shot Pass@1效果如下
 
-The zero-shot Pass@1 of `Qwen-7B-Chat` on [HumanEval](https://github.com/openai/human-eval) is demonstrated below
+The zero-shot Pass@1 of Qwen-7B-Chat on [HumanEval](https://github.com/openai/human-eval) is demonstrated below
 
 | Model | Pass@1 |
 |:--------------:|------:|
@@ -197,9 +198,9 @@ The zero-shot Pass@1 of `Qwen-7B-Chat` on [HumanEval](https://github.com/openai/
 
 ### 数学评测
 
-在评测数学能力的GSM8K上，`Qwen-7B-Chat`的准确率结果如下
+在评测数学能力的[GSM8K](https://github.com/openai/grade-school-math)上，Qwen-7B-Chat的准确率结果如下
 
-The accuracy of `Qwen-7B-Chat` on GSM8K is shown below
+The accuracy of Qwen-7B-Chat on GSM8K is shown below
 
 | Model | Zero-shot Acc. | 4-shot Acc. |
 |:--------------:|------:|------:|
@@ -213,20 +214,21 @@ The accuracy of `Qwen-7B-Chat` on GSM8K is shown below
 
 ### 长序列评测（Long-Context Understanding）
 
-在长文本摘要数据集[GovReport](https://arxiv.org/abs/2104.02112), [QMSum](https://arxiv.org/abs/2104.05938)和[VCSUM](https://arxiv.org/abs/2305.05280)上，`Qwen-7B-Chat`的Rouge-L结果如下：
+通过NTK插值，LogN注意力缩放可以扩展Qwen-7B-Chat的上下文长度。在长文本摘要数据集[VCSUM](https://arxiv.org/abs/2305.05280)上（文本平均长度在15K左右），Qwen-7B-Chat的Rouge-L结果如下：
 
-The Rouge-L results of `Qwen-7B-Chat` on three long-text summarization datasets ([GovReport](https://arxiv.org/abs/2104.02112), [QMSum](https://arxiv.org/abs/2104.05938), [VCSUM](https://arxiv.org/abs/2305.05280)) are shown below:
+**(若要启用这些技巧，请将config.json里的`use_dynamc_ntk`和`use_logn_attn`设置为true)**
 
-| Model | GovReport | QMSum | VCSUM (zh) |
-|----------------|-------|-------|-------|
-| GPT-3.5-Turbo-16k | 29.5 | 23.4 | 16.0 |
-| LLama2-7B-chat-4k	| 27.3 | 20.6 |	0.2 |
-| LongChat-7B-16k |	28.4 | 23.2 | 14.0 |
-| XGen-7B-8k | 27.8 |	21.7 | 1.5 |
-| InternLM-7B-8k | 9.8 | 16.8 |	13.0 |
-| ChatGLM2-6B	| 23.7 | 22.2 | 14.6 |
-| ChatGLM2-6B-32k | **33.3** | **23.9** | 16.3 |
-| **Qwen-7B-Chat** | 31.1 | 21.5 | **16.6** |
+We introduce NTK-aware interpolation, LogN attention scaling to extend the context length of Qwen-7B-Chat. The Rouge-L results of Qwen-7B-Chat on long-text summarization dataset [VCSUM](https://arxiv.org/abs/2305.05280) (The average length of this dataset is around 15K) are shown below:
+
+**(To use these tricks, please set `use_dynamic_ntk` and `use_long_attn` to true in config.json.)**
+
+| Model | VCSUM (zh) |
+|----------------|-------|
+| GPT-3.5-Turbo-16k | 16.0 |
+| LLama2-7B-Chat	|	0.2 |
+| InternLM-7B-Chat | 13.0 |
+| ChatGLM2-6B-Chat	| 16.3 |
+| **Qwen-7B-Chat** | **16.6** |
 
 ### 工具使用能力的评测（Tool Usage）
 
@@ -234,17 +236,17 @@ The Rouge-L results of `Qwen-7B-Chat` on three long-text summarization datasets 
 
 千问支持通过 [ReAct Prompting](https://arxiv.org/abs/2210.03629) 调用插件/工具/API。ReAct 也是 [LangChain](https://python.langchain.com/) 框架采用的主要方式之一。在即将开源的、用于评估工具使用能力的自建评测基准上，千问的表现如下：
 
-`Qwen-7B-Chat` supports calling plugins/tools/APIs through [ReAct Prompting](https://arxiv.org/abs/2210.03629). ReAct is also one of the main approaches used by the [LangChain](https://python.langchain.com/) framework. In the soon-to-be-released evaluation benchmark for assessing tool usage capabilities, `Qwen-7B-Chat`'s performance is as follows:
+Qwen-7B-Chat supports calling plugins/tools/APIs through [ReAct Prompting](https://arxiv.org/abs/2210.03629). ReAct is also one of the main approaches used by the [LangChain](https://python.langchain.com/) framework. In the soon-to-be-released evaluation benchmark for assessing tool usage capabilities, Qwen-7B-Chat's performance is as follows:
 
-| Model | Tool Selection (Acc.↑) | Tool Input (Rouge-L↑) | False Positive Error↓ |
-|-|-|-|-|
-|GPT-4 | 95% | **0.90** | 15%
-|GPT-3.5 | 85% | 0.88 | 75%
-| **Qwen-7B-Chat** | **99%** | 0.89 | **8.5%** |
+| Model            | Tool Selection (Acc.↑) | Tool Input (Rouge-L↑) | False Positive Error↓ |
+|------------------|------------------------|-----------------------|-----------------------|
+| GPT-4            | 95%                    | **0.90**              | 15%                   |
+| GPT-3.5          | 85%                    | 0.88                  | 75%                   |
+| **Qwen-7B-Chat** | **99%**                | 0.89                  | **8.5%**              |
 
 > 评测基准中出现的插件均没有出现在千问的训练集中。该基准评估了模型在多个候选插件中选择正确插件的准确率、传入插件的参数的合理性、以及假阳率。假阳率（False Positive）定义：在处理不该调用插件的请求时，错误地调用了插件。
 
-> The plugins that appear in the evaluation set do not appear in the training set of `Qwen-7B-Chat`. This benchmark evaluates the accuracy of the model in selecting the correct plugin from multiple candidate plugins, the rationality of the parameters passed into the plugin, and the false positive rate. False Positive: Incorrectly invoking a plugin when it should not have been called when responding to a query.
+> The plugins that appear in the evaluation set do not appear in the training set of Qwen-7B-Chat. This benchmark evaluates the accuracy of the model in selecting the correct plugin from multiple candidate plugins, the rationality of the parameters passed into the plugin, and the false positive rate. False Positive: Incorrectly invoking a plugin when it should not have been called when responding to a query.
 
 关于 ReAct Prompting 的 prompt 怎么写、怎么使用，请参考 [ReAct 样例说明](examples/react_prompt.md)。使用工具能使模型更好地完成任务。基于千问的工具使用能力，我们能实现下图所展示的效果：
 
@@ -257,7 +259,7 @@ For how to write and use prompts for ReAct Prompting, please refer to [the ReAct
 
 千问还具备作为 [HuggingFace Agent](https://huggingface.co/docs/transformers/transformers_agents) 的能力。它在 Huggingface 提供的run模式评测基准上的表现如下：
 
-`Qwen-7B-Chat` also has the capability to be used as a [HuggingFace Agent](https://huggingface.co/docs/transformers/transformers_agents). Its performance on the run-mode benchmark provided by HuggingFace is as follows:
+Qwen-7B-Chat also has the capability to be used as a [HuggingFace Agent](https://huggingface.co/docs/transformers/transformers_agents). Its performance on the run-mode benchmark provided by HuggingFace is as follows:
 
 | Model | Tool Selection↑ | Tool Used↑ | Code↑ |
 |-|-|-|-|
@@ -297,7 +299,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 上述方法可以让我们将模型量化成`NF4`和`Int8`精度的模型进行读取，帮助我们节省显存开销。我们也提供了相关性能数据。我们发现尽管模型在效果上存在损失，但模型的显存开销大幅降低。
 
-With this method, it is available to load `Qwen-7B` in `NF4`and`Int8`, which saves you memory usage. We provide related statistics of model performance below. We find that the quantization downgrades the effectiveness slightly but significantly increases inference efficiency and reduces memory costs.
+With this method, it is available to load Qwen-7B-Chat in `NF4`and `Int8`, which saves you memory usage. We provide related statistics of model performance below. We find that the quantization downgrades the effectiveness slightly but significantly increases inference efficiency and reduces memory costs.
 
 | Precision | MMLU | Memory |
 | :---------: | -------: | -----: |
@@ -305,13 +307,11 @@ With this method, it is available to load `Qwen-7B` in `NF4`and`Int8`, which sav
 |   Int8   |  52.8 |   10.1G |
 |    NF4    |  48.9 |    7.4G |
 
-
-
 ## 使用协议（License Agreement）
 
 我们的代码和模型权重对学术研究完全开放，并支持商用。请查看LICENSE了解具体的开源协议细节。
 
-Our code and checkpoints are open to research purpose, and they are allowed for commercial purposes. Check LICENSE.txt for more details about the license.
+Our code and checkpoints are open to research purpose, and they are allowed for commercial purposes. Check [LICENSE](LICENSE) for more details about the license.
 
 ## 联系我们（Contact Us）
 
