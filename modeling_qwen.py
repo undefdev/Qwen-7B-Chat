@@ -36,18 +36,17 @@ try:
     from einops import rearrange
 
     use_flash_rotary = True
-    print("use flash_attn rotary")
 except ImportError:
     use_flash_rotary = False
-    print("import flash_attn rotary fail")
+    print("Warning: import flash_attn rotary fail, please install FlashAttention rotary to get better performance "
+          "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/rotary")
 
 try:
     from flash_attn.ops.rms_norm import rms_norm
-
-    print("use flash_attn rms_norm")
 except ImportError:
     rms_norm = None
-    print("import flash_attn rms_norm fail")
+    print("Warning: import flash_attn rms_norm fail, please install FlashAttention layer_norm to get better performance "
+          "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/layer_norm")
 
 from .configuration_qwen import QWenConfig
 from .qwen_generation_utils import (
@@ -70,6 +69,8 @@ try:
     from flash_attn.flash_attn_interface import flash_attn_unpadded_func
 except ImportError:
     flash_attn_unpadded_func = None
+    print("Warning: import flash_attn fail, please install FlashAttention "
+          "https://github.com/Dao-AILab/flash-attention")
 
 
 class FlashSelfAttention(torch.nn.Module):
@@ -176,7 +177,7 @@ class QWenAttention(nn.Module):
             config.hidden_size, self.projection_size, bias=not config.no_bias
         )
 
-        if self.use_flash_attn:
+        if self.use_flash_attn and flash_attn_unpadded_func is not None:
             self.core_attention_flash = FlashSelfAttention(
                 causal=True, attention_dropout=config.attn_pdrop
             )
@@ -333,7 +334,7 @@ class QWenAttention(nn.Module):
         if layer_past:
             # layer past[0] shape: bs * seq_len * head_num * dim
             kv_seq_len += layer_past[0].shape[1]
-        if self.use_dynamic_ntk and kv_seq_len == hidden_states.size()[1]:
+        if self.use_dynamic_ntk and kv_seq_len == hidden_states.size()[1] and not self.training:
             context_value = math.log(kv_seq_len / self.seq_length, 2) + 1
             ntk_alpha = 2 ** math.ceil(context_value) - 1
             ntk_alpha = max(ntk_alpha, 1)
@@ -367,7 +368,7 @@ class QWenAttention(nn.Module):
         else:
             present = None
 
-        if self.use_logn_attn:
+        if self.use_logn_attn and not self.training:
             if self.logn_tensor.device != query.device:
                 self.logn_tensor = self.logn_tensor.to(query.device).type_as(query)
             seq_start = key.size(0) - query.size(0)
@@ -375,7 +376,7 @@ class QWenAttention(nn.Module):
             logn_tensor = self.logn_tensor[:, seq_start:seq_end, :, :]
             query = query * logn_tensor.expand_as(query)
 
-        if self.use_flash_attn:
+        if self.use_flash_attn and flash_attn_unpadded_func is not None:
             q, k, v = query, key, value
             context_layer = self.core_attention_flash(q, k, v)
 
@@ -396,7 +397,7 @@ class QWenAttention(nn.Module):
         attn_output = self.c_proj(context_layer)
         outputs = (attn_output, present)
         if output_attentions:
-            if self.use_flash_attn:
+            if self.use_flash_attn and flash_attn_unpadded_func is not None:
                 raise ValueError("Cannot output attentions while using flash-attn")
             else:
                 outputs += (attn_weight,)
@@ -748,6 +749,13 @@ class QWenLMHeadModel(QWenPreTrainedModel):
         super().__init__(config)
         self.transformer = QWenModel(config)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        assert not(config.bf16 and config.fp16), ("In config, bf16 and fp16 cannot both be true")
+        if config.bf16:
+            self.transformer.bfloat16()
+            self.lm_head.bfloat16()
+        if config.fp16:
+            self.transformer.half()
+            self.lm_head.half()
         self.post_init()
 
     def get_output_embeddings(self):
@@ -957,8 +965,7 @@ class RotaryEmbedding(torch.nn.Module):
         super().__init__()
         self.dim = dim
         self.base = base
-        inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float() / dim))
-        self.register_buffer("inv_freq", inv_freq)
+        self.inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float() / dim))
         if importlib.util.find_spec("einops") is None:
             raise RuntimeError("einops is required for Rotary Embedding")
 
