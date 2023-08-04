@@ -65,6 +65,9 @@ from transformers.generation import GenerationConfig
 # To remove the strategy, you can add `allowed_special`, which accepts the string "all" or a `set` of special tokens.
 # For example: tokens = tokenizer(text, allowed_special="all")
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-7B-Chat", trust_remote_code=True)
+# We recommend checking the support of BF16 first. Run the command below:
+# import torch
+# torch.cuda.is_bf16_supported()
 # use bf16
 # model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-7B-Chat", device_map="auto", trust_remote_code=True, bf16=True).eval()
 # use fp16
