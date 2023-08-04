@@ -15,6 +15,7 @@ from torch.cuda.amp import autocast
 from torch.nn import CrossEntropyLoss
 from transformers import PreTrainedTokenizer, GenerationConfig, StoppingCriteriaList
 from transformers.generation.logits_process import LogitsProcessorList
+
 if TYPE_CHECKING:
     from transformers.generation.streamers import BaseStreamer
 from transformers.generation.utils import GenerateOutput
@@ -38,15 +39,19 @@ try:
     use_flash_rotary = True
 except ImportError:
     use_flash_rotary = False
-    print("Warning: import flash_attn rotary fail, please install FlashAttention rotary to get better performance "
-          "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/rotary")
+    print(
+        "Warning: import flash_attn rotary fail, please install FlashAttention rotary to get better performance "
+        "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/rotary"
+    )
 
 try:
     from flash_attn.ops.rms_norm import rms_norm
 except ImportError:
     rms_norm = None
-    print("Warning: import flash_attn rms_norm fail, please install FlashAttention layer_norm to get better performance "
-          "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/layer_norm")
+    print(
+        "Warning: import flash_attn rms_norm fail, please install FlashAttention layer_norm to get better performance "
+        "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/layer_norm"
+    )
 
 from .configuration_qwen import QWenConfig
 from .qwen_generation_utils import (
@@ -69,8 +74,10 @@ try:
     from flash_attn.flash_attn_interface import flash_attn_unpadded_func
 except ImportError:
     flash_attn_unpadded_func = None
-    print("Warning: import flash_attn fail, please install FlashAttention "
-          "https://github.com/Dao-AILab/flash-attention")
+    print(
+        "Warning: import flash_attn fail, please install FlashAttention "
+        "https://github.com/Dao-AILab/flash-attention"
+    )
 
 
 class FlashSelfAttention(torch.nn.Module):
@@ -177,8 +184,12 @@ class QWenAttention(nn.Module):
             config.hidden_size, self.projection_size, bias=not config.no_bias
         )
 
-        self.is_fp32 = not(config.bf16 or config.fp16)
-        if self.use_flash_attn and flash_attn_unpadded_func is not None and not self.is_fp32:
+        self.is_fp32 = not (config.bf16 or config.fp16)
+        if (
+            self.use_flash_attn
+            and flash_attn_unpadded_func is not None
+            and not self.is_fp32
+        ):
             self.core_attention_flash = FlashSelfAttention(
                 causal=True, attention_dropout=config.attn_pdrop
             )
@@ -197,14 +208,15 @@ class QWenAttention(nn.Module):
             if self.rotary_ndims is not None
             else self.hidden_size_per_attention_head
         )
-        self.rotary_emb = RotaryEmbedding(
-            dim, base=config.rotary_emb_base
-        )
+        self.rotary_emb = RotaryEmbedding(dim, base=config.rotary_emb_base)
 
         self.use_dynamic_ntk = config.use_dynamic_ntk
         self.use_logn_attn = config.use_logn_attn
 
-        logn_list = [math.log(i, self.seq_length) if i > self.seq_length else 1 for i in range(1, 32768)]
+        logn_list = [
+            math.log(i, self.seq_length) if i > self.seq_length else 1
+            for i in range(1, 32768)
+        ]
         self.logn_tensor = torch.Tensor(logn_list)[None, :, None, None]
         self._ntk_cached = 1.0
 
@@ -335,14 +347,20 @@ class QWenAttention(nn.Module):
         if layer_past:
             # layer past[0] shape: bs * seq_len * head_num * dim
             kv_seq_len += layer_past[0].shape[1]
-        if self.use_dynamic_ntk and kv_seq_len == hidden_states.size()[1] and not self.training:
+        if (
+            self.use_dynamic_ntk
+            and kv_seq_len == hidden_states.size()[1]
+            and not self.training
+        ):
             context_value = math.log(kv_seq_len / self.seq_length, 2) + 1
             ntk_alpha = 2 ** math.ceil(context_value) - 1
             ntk_alpha = max(ntk_alpha, 1)
             self._ntk_cached = ntk_alpha
         else:
             ntk_alpha = self._ntk_cached
-        rotary_pos_emb = self.rotary_emb(kv_seq_len, ntk_alpha=ntk_alpha).to(hidden_states.device)
+        rotary_pos_emb = self.rotary_emb(kv_seq_len, ntk_alpha=ntk_alpha).to(
+            hidden_states.device
+        )
 
         if rotary_pos_emb is not None:
             if isinstance(rotary_pos_emb, tuple):
@@ -377,7 +395,12 @@ class QWenAttention(nn.Module):
             logn_tensor = self.logn_tensor[:, seq_start:seq_end, :, :]
             query = query * logn_tensor.expand_as(query)
 
-        if self.use_flash_attn and flash_attn_unpadded_func is not None and not self.is_fp32:
+        if (
+            self.use_flash_attn
+            and flash_attn_unpadded_func is not None
+            and not self.is_fp32
+            and query.is_cuda
+        ):
             q, k, v = query, key, value
             context_layer = self.core_attention_flash(q, k, v)
 
@@ -398,7 +421,11 @@ class QWenAttention(nn.Module):
         attn_output = self.c_proj(context_layer)
         outputs = (attn_output, present)
         if output_attentions:
-            if self.use_flash_attn and flash_attn_unpadded_func is not None and not self.is_fp32:
+            if (
+                self.use_flash_attn
+                and flash_attn_unpadded_func is not None
+                and not self.is_fp32
+            ):
                 raise ValueError("Cannot output attentions while using flash-attn")
             else:
                 outputs += (attn_weight,)
@@ -750,7 +777,9 @@ class QWenLMHeadModel(QWenPreTrainedModel):
         super().__init__(config)
         self.transformer = QWenModel(config)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
-        assert not(config.bf16 and config.fp16), ("In config, bf16 and fp16 cannot both be true")
+        assert not (
+            config.bf16 and config.fp16
+        ), "In config, bf16 and fp16 cannot both be true"
         if config.bf16:
             self.transformer.bfloat16()
             self.lm_head.bfloat16()
@@ -929,21 +958,25 @@ class QWenLMHeadModel(QWenPreTrainedModel):
         generation_config: Optional[GenerationConfig] = None,
         logits_processor: Optional[LogitsProcessorList] = None,
         stopping_criteria: Optional[StoppingCriteriaList] = None,
-        prefix_allowed_tokens_fn: Optional[Callable[[int, torch.Tensor], List[int]]] = None,
+        prefix_allowed_tokens_fn: Optional[
+            Callable[[int, torch.Tensor], List[int]]
+        ] = None,
         synced_gpus: Optional[bool] = None,
         streamer: Optional["BaseStreamer"] = None,
         **kwargs,
     ) -> Union[GenerateOutput, torch.LongTensor]:
         # Process stop_words_ids.
-        stop_words_ids = kwargs.pop('stop_words_ids', None)
+        stop_words_ids = kwargs.pop("stop_words_ids", None)
         if stop_words_ids is None and generation_config is not None:
-            stop_words_ids = getattr(generation_config, 'stop_words_ids', None)
+            stop_words_ids = getattr(generation_config, "stop_words_ids", None)
         if stop_words_ids is None:
-            stop_words_ids = getattr(self.generation_config, 'stop_words_ids', None)
+            stop_words_ids = getattr(self.generation_config, "stop_words_ids", None)
 
         if stop_words_ids is not None:
             stop_words_logits_processor = StopWordsLogitsProcessor(
-                stop_words_ids=stop_words_ids, eos_token_id=self.generation_config.eos_token_id)
+                stop_words_ids=stop_words_ids,
+                eos_token_id=self.generation_config.eos_token_id,
+            )
             if logits_processor is None:
                 logits_processor = LogitsProcessorList([stop_words_logits_processor])
             else:
@@ -978,7 +1011,13 @@ class RotaryEmbedding(torch.nn.Module):
         seqlen = max_seq_len + offset
         if seqlen > self._seq_len_cached or ntk_alpha != self._ntk_alpha_cached:
             base = self.base * ntk_alpha ** (self.dim / (self.dim - 2))
-            self.inv_freq = 1.0 / (base ** (torch.arange(0, self.dim, 2, device=self.inv_freq.device).float() / self.dim))
+            self.inv_freq = 1.0 / (
+                base
+                ** (
+                    torch.arange(0, self.dim, 2, device=self.inv_freq.device).float()
+                    / self.dim
+                )
+            )
             self._seq_len_cached = seqlen
             self._ntk_alpha_cached = ntk_alpha
             seq = torch.arange(seqlen, device=self.inv_freq.device)
@@ -1028,7 +1067,7 @@ class RMSNorm(torch.nn.Module):
         return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
 
     def forward(self, x):
-        if rms_norm is not None:
+        if rms_norm is not None and x.is_cuda:
             return rms_norm(x, self.weight, self.eps)
         else:
             output = self._norm(x.float()).type_as(x)
