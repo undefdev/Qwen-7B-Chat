@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 VOCAB_FILES_NAMES = {"vocab_file": "qwen.tiktoken"}
 
-
 class QWenTokenizer(PreTrainedTokenizer):
     """QWen tokenizer."""
 
@@ -199,17 +198,16 @@ class QWenTokenizer(PreTrainedTokenizer):
 
         return tokens
 
-    def convert_tokens_to_string(self, tokens: List[str]) -> str:
+    def convert_tokens_to_string(self, tokens: List[bytes]) -> str:
         """
         Converts a sequence of tokens in a single string. The most simple way to do it is `" ".join(tokens)` but we
         often want to remove sub-word tokenization artifacts at the same time.
         """
-        text = "".join(tokens)
-        text = bytearray([self.byte_decoder[c] for c in text]).decode(
-            "utf-8", errors=self.errors
-        )
-        return text
-
+        text = b""
+        for token in tokens:
+            text += token
+        return text.decode('utf-8')
+  
     @property
     def vocab_size(self):
         return self.tokenizer.n_vocab
