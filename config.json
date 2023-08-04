@@ -40,6 +40,6 @@
   "use_cache": true,
   "use_flash_attn": true,
   "vocab_size": 151936,
-  "use_dynamic_ntk": false,
-  "use_logn_attn": false
+  "use_dynamic_ntk": true,
+  "use_logn_attn": true
 }
