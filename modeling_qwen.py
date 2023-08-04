@@ -32,26 +32,13 @@ except ImportError:
     rearrange = None
 from torch import nn
 
-try:
-    from flash_attn.layers.rotary import apply_rotary_emb_func
-    from einops import rearrange
+SUPPORT_CUDA = torch.cuda.is_available()
+SUPPORT_BF16 = SUPPORT_CUDA and torch.cuda.is_bf16_supported()
+SUPPORT_FP16 = SUPPORT_CUDA and torch.cuda.get_device_capability(0)[0] >= 7
 
-    use_flash_rotary = True
-except ImportError:
-    use_flash_rotary = False
-    print(
-        "Warning: import flash_attn rotary fail, please install FlashAttention rotary to get better performance "
-        "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/rotary"
-    )
-
-try:
-    from flash_attn.ops.rms_norm import rms_norm
-except ImportError:
-    rms_norm = None
-    print(
-        "Warning: import flash_attn rms_norm fail, please install FlashAttention layer_norm to get better performance "
-        "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/layer_norm"
-    )
+apply_rotary_emb_func = None
+rms_norm = None
+flash_attn_unpadded_func = None
 
 from .configuration_qwen import QWenConfig
 from .qwen_generation_utils import (
@@ -69,16 +56,6 @@ _CHECKPOINT_FOR_DOC = "qwen"
 _CONFIG_FOR_DOC = "QWenConfig"
 
 QWen_PRETRAINED_MODEL_ARCHIVE_LIST = ["qwen-7b"]
-
-try:
-    from flash_attn.flash_attn_interface import flash_attn_unpadded_func
-except ImportError:
-    flash_attn_unpadded_func = None
-    print(
-        "Warning: import flash_attn fail, please install FlashAttention "
-        "https://github.com/Dao-AILab/flash-attention"
-    )
-
 
 class FlashSelfAttention(torch.nn.Module):
     def __init__(
@@ -388,7 +365,7 @@ class QWenAttention(nn.Module):
             present = None
 
         if self.use_logn_attn and not self.training:
-            if self.logn_tensor.device != query.device:
+            if self.logn_tensor.device != query.device or self.logn_tensor.dtype != query.dtype:
                 self.logn_tensor = self.logn_tensor.to(query.device).type_as(query)
             seq_start = key.size(1) - query.size(1)
             seq_end = key.size(1)
@@ -775,11 +752,79 @@ class QWenLMHeadModel(QWenPreTrainedModel):
 
     def __init__(self, config):
         super().__init__(config)
+        assert (
+            config.bf16 + config.fp16 + config.fp32 <= 1
+        ), "Only one of \"bf16\", \"fp16\", \"fp32\" can be true"
+
+        autoset_precision = config.bf16 + config.fp16 + config.fp32 == 0
+
+        if autoset_precision:
+            if SUPPORT_BF16:
+                logger.warn(
+                    "The model is automatically converting to bf16 for faster inference. "
+                    "If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to \"AutoModelForCausalLM.from_pretrained\"."
+                )
+                config.bf16 = True
+            elif SUPPORT_FP16:
+                logger.warn(
+                    "The model is automatically converting to fp16 for faster inference. "
+                    "If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to \"AutoModelForCausalLM.from_pretrained\"."
+                )
+                config.fp16 = True
+            else:
+                config.fp32 = True
+
+        if config.bf16 and SUPPORT_CUDA and not SUPPORT_BF16:
+            logger.warn("Your device does NOT seem to support bf16, you can switch to fp16 or fp32 by by passing fp16/fp32=True in \"AutoModelForCausalLM.from_pretrained\".")
+        if config.fp16 and SUPPORT_CUDA and not SUPPORT_FP16:
+            logger.warn("Your device does NOT support faster inference with fp16, please switch to fp32 which is likely to be faster")
+        if config.fp32:
+            if SUPPORT_BF16:
+                logger.warn("Your device support faster inference by passing bf16=True in \"AutoModelForCausalLM.from_pretrained\".")
+            elif SUPPORT_FP16:
+                logger.warn("Your device support faster inference by passing fp16=True in \"AutoModelForCausalLM.from_pretrained\".")
+        
+        if config.use_flash_attn == "auto":
+            if config.bf16 or config.fp16:
+                logger.warn("Try importing flash-attention for faster inference...")
+                config.use_flash_attn = True
+            else:
+                config.use_flash_attn = False
+        if config.use_flash_attn and config.fp32:
+            logger.warn("Flash attention will be disabled because it does NOT support fp32.")
+
+        if config.use_flash_attn:
+            global apply_rotary_emb_func, rms_norm, flash_attn_unpadded_func
+            try:
+                from flash_attn.layers.rotary import apply_rotary_emb_func as __apply_rotary_emb_func
+                apply_rotary_emb_func = __apply_rotary_emb_func
+            except ImportError:
+                logger.warn(
+                    "Warning: import flash_attn rotary fail, please install FlashAttention rotary to get higher efficiency "
+                    "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/rotary"
+                )
+
+            try:
+                from flash_attn.ops.rms_norm import rms_norm as __rms_norm
+                rms_norm = __rms_norm
+            except ImportError:
+                logger.warn(
+                    "Warning: import flash_attn rms_norm fail, please install FlashAttention layer_norm to get higher efficiency "
+                    "https://github.com/Dao-AILab/flash-attention/tree/main/csrc/layer_norm"
+                )
+
+            try:
+                from flash_attn.flash_attn_interface import flash_attn_unpadded_func as __flash_attn_unpadded_func
+                flash_attn_unpadded_func = __flash_attn_unpadded_func
+            except ImportError:
+                logger.warn(
+                    "Warning: import flash_attn fail, please install FlashAttention to get higher efficiency "
+                    "https://github.com/Dao-AILab/flash-attention"
+                )
+
         self.transformer = QWenModel(config)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
-        assert not (
-            config.bf16 and config.fp16
-        ), "In config, bf16 and fp16 cannot both be true"
+
         if config.bf16:
             self.transformer.bfloat16()
             self.lm_head.bfloat16()
@@ -1040,8 +1085,8 @@ def _rotate_half(x):
     return torch.cat((-x2, x1), dim=-1)
 
 
-def apply_rotary_pos_emb(t, freqs, use_flash_rotary=False):
-    if use_flash_rotary:
+def apply_rotary_pos_emb(t, freqs):
+    if apply_rotary_emb_func is not None:
         t_ = t.float()
         freqs = freqs.squeeze(0).squeeze(1)
         cos = freqs[:, : freqs.shape[-1] // 2].cos()
