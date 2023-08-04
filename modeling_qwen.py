@@ -177,7 +177,8 @@ class QWenAttention(nn.Module):
             config.hidden_size, self.projection_size, bias=not config.no_bias
         )
 
-        if self.use_flash_attn and flash_attn_unpadded_func is not None:
+        self.is_fp32 = not(config.bf16 or config.fp16)
+        if self.use_flash_attn and flash_attn_unpadded_func is not None and not self.is_fp32:
             self.core_attention_flash = FlashSelfAttention(
                 causal=True, attention_dropout=config.attn_pdrop
             )
@@ -371,12 +372,12 @@ class QWenAttention(nn.Module):
         if self.use_logn_attn and not self.training:
             if self.logn_tensor.device != query.device:
                 self.logn_tensor = self.logn_tensor.to(query.device).type_as(query)
-            seq_start = key.size(0) - query.size(0)
-            seq_end = key.size(0)
+            seq_start = key.size(1) - query.size(1)
+            seq_end = key.size(1)
             logn_tensor = self.logn_tensor[:, seq_start:seq_end, :, :]
             query = query * logn_tensor.expand_as(query)
 
-        if self.use_flash_attn and flash_attn_unpadded_func is not None:
+        if self.use_flash_attn and flash_attn_unpadded_func is not None and not self.is_fp32:
             q, k, v = query, key, value
             context_layer = self.core_attention_flash(q, k, v)
 
@@ -397,7 +398,7 @@ class QWenAttention(nn.Module):
         attn_output = self.c_proj(context_layer)
         outputs = (attn_output, present)
         if output_attentions:
-            if self.use_flash_attn and flash_attn_unpadded_func is not None:
+            if self.use_flash_attn and flash_attn_unpadded_func is not None and not self.is_fp32:
                 raise ValueError("Cannot output attentions while using flash-attn")
             else:
                 outputs += (attn_weight,)
