@@ -958,7 +958,9 @@ class QWenLMHeadModel(QWenPreTrainedModel):
         history: Optional[HistoryType],
         system: str = "You are a helpful assistant.",
         append_history: bool = True,
+        stream: Optional[bool] = False
     ) -> Tuple[str, HistoryType]:
+
 
         if history is None:
             history = []
@@ -976,21 +978,36 @@ class QWenLMHeadModel(QWenPreTrainedModel):
             self.generation_config.chat_format, tokenizer
         )
         input_ids = torch.tensor([context_tokens]).to(self.device)
+        if stream:
+            assert self.generation_config.chat_format == 'chatml'
+            from transformers_stream_generator.main import NewGenerationMixin, StreamGenerationConfig
+            self.__class__.generate = NewGenerationMixin.generate
+            self.__class__.sample_stream = NewGenerationMixin.sample_stream
+            stream_config = StreamGenerationConfig(**self.generation_config.to_dict(), do_stream=True)
+            def stream_generator():
+                outputs = []
+                for token in self.generate(input_ids, return_dict_in_generate=False, generation_config=stream_config):
+                    outputs.append(token.item())
+                    if outputs[-1] in (tokenizer.im_end_id, tokenizer.im_start_id):
+                        break
+                    yield tokenizer.decode(outputs, skip_special_tokens=True)
 
-        outputs = self.generate(
-            input_ids,
-            stop_words_ids=stop_words_ids,
-            return_dict_in_generate=False,
-        )
+            return stream_generator()
+        else:
+            outputs = self.generate(
+                        input_ids,
+                        stop_words_ids = stop_words_ids,
+                        return_dict_in_generate = False,
+                    )
 
-        response = decode_tokens(
-            outputs[0],
-            tokenizer,
-            raw_text_len=len(raw_text),
-            context_length=len(context_tokens),
-            chat_format=self.generation_config.chat_format,
-            verbose=False,
-        )
+            response = decode_tokens(
+                outputs[0],
+                tokenizer,
+                raw_text_len=len(raw_text),
+                context_length=len(context_tokens),
+                chat_format=self.generation_config.chat_format,
+                verbose=False,
+            )
 
         if append_history:
             history.append((query, response))
