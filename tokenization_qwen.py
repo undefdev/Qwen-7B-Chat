@@ -126,6 +126,7 @@ class QWenTokenizer(PreTrainedTokenizer):
         self.mergeable_ranks = mergeable_ranks
         self.encoder = self.mergeable_ranks
         self.decoder = {v: k for k, v in self.encoder.items()}
+        self.decoder.update({v: k for k, v in self.special_tokens.items()})
         self.tokenizer = enc  # type: tiktoken.Encoding
         self.eod_id = self.tokenizer.eot_token
         self.im_start_id = special_tokens[IMSTART]
@@ -182,16 +183,20 @@ class QWenTokenizer(PreTrainedTokenizer):
             text (`str`):
                 The sequence to be encoded.
             kwargs (additional keyword arguments, *optional*):
-                Will be passed to the underlying model specific encode method. See details in
-                [`~PreTrainedTokenizerBase.__call__`]
+                Will be passed to the underlying model specific encode method.
+                Tiktoken allows users to allow the tokenization of special tokens with the following args:
+                `allowed_special`: set to 'all' or a `set` of special tokens.
+                `disallowed_special`: set to 'all' or a `Collection` of special tokens. NOT RECOMMENDED, AS IT MAY BE CONFLICTED WITH `allowed_special`.
 
         Returns:
             `List[str]`: The list of tokens.
         """
         tokens = []
         text = unicodedata.normalize("NFC", text)
-        for t in self.tokenizer.encode_ordinary(text):
+
+        for t in self.tokenizer.encode(text, **kwargs):
             tokens.append(self.decoder[t])
+
         return tokens
 
     def convert_tokens_to_string(self, tokens: List[str]) -> str:
@@ -216,7 +221,10 @@ class QWenTokenizer(PreTrainedTokenizer):
 
     def _convert_token_to_id(self, token: str) -> int:
         """Converts a token to an id using the vocab."""
-        return self.encoder.get(token.encode('UTF-8'), self.tokenizer.encode(self.unk_token, allowed_special='all')[0])
+        return self.encoder.get(
+            token.encode("UTF-8"),
+            self.tokenizer.encode(self.unk_token, allowed_special="all")[0],
+        )
 
     @property
     def all_special_tokens(self) -> List[str]:
